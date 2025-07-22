@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perkins Pie Society Dice Roller</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      background-color: #f8f9fa;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    #results {
+      margin-top: 20px;
+      font-size: 18px;
+      white-space: pre-wrap;
+    }
+    .hit-buttons {
+      margin-top: 15px;
+    }
+    .hit-buttons button, #rerollBtn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .hit-buttons button:hover, #rerollBtn:hover {
+      background-color: #0056b3;
+    }
+
+    .crit {
+      color: green;
+      font-weight: bold;
+      display: inline-block;
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .rerolled {
+      color: goldenrod;
+      text-decoration: underline;
+      font-weight: bold;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(0); }
+      25% { transform: translate(1px, -1px); }
+      50% { transform: translate(-2px, 1px); }
+      75% { transform: translate(2px, 0); }
+      100% { transform: translate(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎲 40k D6 Dice Roller</h1>
+
+  <label for="diceCount">Number of D6 dice (1–200):</label>
+  <input type="number" id="diceCount" min="1" max="200" value="1">
+
+  <div class="hit-buttons">
+    <p>Select the hit threshold:</p>
+    <button onclick="rollDice(2)">Hit on 2+</button>
+    <button onclick="rollDice(3)">Hit on 3+</button>
+    <button onclick="rollDice(4)">Hit on 4+</button>
+    <button onclick="rollDice(5)">Hit on 5+</button>
+    <button onclick="rollDice(6)">Hit on 6+</button>
+  </div>
+
+  <button id="rerollBtn" onclick="rerollFailures()" style="display:none;">♻️ Re-roll Failed Dice</button>
+
+  <div id="results"></div>
+
+  <script>
+    let currentRolls = [];
+    let failedIndexes = [];
+    let rerolledIndexes = [];
+    let hitThresholdGlobal = 4;
+
+    function rollDice(hitThreshold) {
+      const countInput = document.getElementById('diceCount');
+      const resultDiv = document.getElementById('results');
+      let numDice = parseInt(countInput.value);
+
+      if (isNaN(numDice) || numDice < 1 || numDice > 200) {
+        resultDiv.textContent = "Please enter a number between 1 and 200.";
+        return;
+      }
+
+      currentRolls = [];
+      failedIndexes = [];
+      rerolledIndexes = [];
+      hitThresholdGlobal = hitThreshold;
+
+      let counts = Array(6).fill(0);
+      let total = 0;
+      let hits = 0;
+
+      for (let i = 0; i < numDice; i++) {
+        let roll = Math.floor(Math.random() * 6) + 1;
+        currentRolls.push(roll);
+        counts[roll - 1]++;
+        total += roll;
+
+        if (roll >= hitThreshold) {
+          hits++;
+        } else {
+          failedIndexes.push(i);
+        }
+      }
+
+      displayResults(currentRolls, counts, total, hits, hitThreshold, false);
+      document.getElementById('rerollBtn').style.display = failedIndexes.length > 0 ? 'inline-block' : 'none';
+    }
+
+    function rerollFailures() {
+      let newHits = 0;
+      let newTotal = 0;
+      let counts = Array(6).fill(0);
+      rerolledIndexes = [];
+
+      for (let i = 0; i < currentRolls.length; i++) {
+        if (failedIndexes.includes(i)) {
+          let roll = Math.floor(Math.random() * 6) + 1;
+          currentRolls[i] = roll;
+          rerolledIndexes.push(i);
+        }
+        let finalRoll = currentRolls[i];
+        counts[finalRoll - 1]++;
+        newTotal += finalRoll;
+        if (finalRoll >= hitThresholdGlobal) {
+          newHits++;
+        }
+      }
+
+      displayResults(currentRolls, counts, newTotal, newHits, hitThresholdGlobal, true);
+      document.getElementById('rerollBtn').style.display = 'none';
+    }
+
+    function displayResults(rolls, counts, total, hits, threshold, isReroll) {
+      const resultDiv = document.getElementById('results');
+
+      const indexedRolls = rolls.map((value, index) => ({ value, index }));
+      indexedRolls.sort((a, b) => a.value - b.value);
+
+      const formattedRolls = indexedRolls.map(({ value, index }) => {
+        let classes = [];
+        if (value === 6) classes.push("crit");
+        if (rerolledIndexes.includes(index)) classes.push("rerolled");
+
+        const classAttr = classes.length > 0 ? `class="${classes.join(' ')}"` : "";
+        return `<span ${classAttr}>${value}${value === 6 ? "✨" : ""}</span>`;
+      }).join(', ');
+
+      let countSummary = '';
+      for (let i = 0; i < 6; i++) {
+        countSummary += `• ${i + 1}s: ${counts[i]}\n`;
+      }
+
+      resultDiv.innerHTML =
+        `🎯 Hit Threshold: ${threshold}+\n` +
+        (isReroll ? `♻️ After Re-rolling Failed Dice:\n` : '') +
+        `🎲 You rolled ${rolls.length} D6 dice (sorted):\n` +
+        `${formattedRolls}\n\n` +
+        `🧮 Total of all dice: ${total}\n` +
+        `📊 Count of each face:\n${countSummary}\n` +
+        `✅ Hits (≥ ${threshold}): ${hits}`;
+    }
+  </script>
+
+</body>
+</html>
