@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Perkins Pie Society Dice Roller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 30px;
+      margin: 0;
+      padding: 20px;
       background-color: #f8f9fa;
+      color: #333;
     }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
     input, button {
       padding: 10px;
       font-size: 16px;
       margin: 5px;
+      border-radius: 5px;
     }
-    #results {
+
+    #results, #simpleResult {
       margin-top: 20px;
       font-size: 18px;
       white-space: pre-wrap;
+      text-align: center;
     }
-    .hit-buttons {
+
+    .hit-buttons, .simple-roller, .bottom-controls {
+      text-align: center;
       margin-top: 15px;
     }
-    .hit-buttons button, #rerollBtn {
+
+    .hit-buttons button, #rerollBtn, .bottom-controls button {
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 5px;
       cursor: pointer;
     }
-    .hit-buttons button:hover, #rerollBtn:hover {
+
+    .hit-buttons button:hover, #rerollBtn:hover, .bottom-controls button:hover {
       background-color: #0056b3;
     }
 
@@ -53,27 +72,70 @@
       75% { transform: translate(2px, 0); }
       100% { transform: translate(0); }
     }
+
+    .dark-mode {
+      background-color: #121212;
+      color: #eee;
+    }
+
+    .dark-mode button {
+      background-color: #333;
+      color: #eee;
+    }
+
+    .dark-mode .hit-buttons button:hover,
+    .dark-mode #rerollBtn:hover,
+    .dark-mode .bottom-controls button:hover {
+      background-color: #444;
+    }
+
+    label {
+      display: block;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .bottom-controls {
+      margin-top: 40px;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🎲 40k D6 Dice Roller</h1>
 
-  <h1>🎲 40k D6 Dice Roller</h1>
+    <label for="diceCount">Number of D6 dice (1–200):</label>
+    <div class="hit-buttons">
+      <input type="number" id="diceCount" min="1" max="200" value="1" />
+    </div>
 
-  <label for="diceCount">Number of D6 dice (1–200):</label>
-  <input type="number" id="diceCount" min="1" max="200" value="1">
+    <div class="hit-buttons">
+      <p>Select the hit threshold:</p>
+      <button onclick="rollDice(2)">Hit on 2+</button>
+      <button onclick="rollDice(3)">Hit on 3+</button>
+      <button onclick="rollDice(4)">Hit on 4+</button>
+      <button onclick="rollDice(5)">Hit on 5+</button>
+      <button onclick="rollDice(6)">Hit on 6+</button>
+    </div>
 
-  <div class="hit-buttons">
-    <p>Select the hit threshold:</p>
-    <button onclick="rollDice(2)">Hit on 2+</button>
-    <button onclick="rollDice(3)">Hit on 3+</button>
-    <button onclick="rollDice(4)">Hit on 4+</button>
-    <button onclick="rollDice(5)">Hit on 5+</button>
-    <button onclick="rollDice(6)">Hit on 6+</button>
+    <div class="hit-buttons">
+      <button id="rerollBtn" onclick="rerollFailures()" style="display:none;">♻️ Re-roll Failed Dice</button>
+    </div>
+
+    <div id="results"></div>
+
+    <div class="simple-roller">
+      <h2>Simple D6 Roller</h2>
+      <label for="simpleDiceCount">Number of Dice (1–10):</label>
+      <input type="number" id="simpleDiceCount" min="1" max="10" value="1" />
+      <button onclick="simpleRoll()">Roll</button>
+      <div id="simpleResult"></div>
+    </div>
+
+    <div class="bottom-controls">
+      <button onclick="toggleDarkMode()">🌓 Toggle Dark Mode</button>
+    </div>
   </div>
-
-  <button id="rerollBtn" onclick="rerollFailures()" style="display:none;">♻️ Re-roll Failed Dice</button>
-
-  <div id="results"></div>
 
   <script>
     let currentRolls = [];
@@ -170,7 +232,25 @@
         `📊 Count of each face:\n${countSummary}\n` +
         `✅ Hits (≥ ${threshold}): ${hits}`;
     }
-  </script>
 
+    function simpleRoll() {
+      const count = parseInt(document.getElementById("simpleDiceCount").value);
+      const resultDiv = document.getElementById("simpleResult");
+
+      if (isNaN(count) || count < 1 || count > 10) {
+        resultDiv.textContent = "Please enter a number between 1 and 10.";
+        return;
+      }
+
+      const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
+      const total = rolls.reduce((sum, val) => sum + val, 0);
+
+      resultDiv.textContent = `🎲 Simple Roll: ${rolls.join(', ')}\n🧮 Total: ${total}`;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+  </script>
 </body>
 </html>
